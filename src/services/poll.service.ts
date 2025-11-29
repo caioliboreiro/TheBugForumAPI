@@ -110,6 +110,10 @@ export class PollService {
       throw new AppError('Unauthorized', 403);
     }
 
+    if (poll.expiresAt && poll.expiresAt < new Date()) {
+      throw new AppError('Cannot edit an expired poll', 400);
+    }
+
     const updateData: any = {};
     if (data.expiresAt !== undefined) updateData.expiresAt = data.expiresAt;
     if (data.multipleChoice !== undefined) updateData.multipleChoice = data.multipleChoice;
