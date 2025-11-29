@@ -146,7 +146,6 @@ No Swagger UI, clique no botão "Authorize" e insira seu token.
 #### Feed e Busca
 - `GET /feed` - Feed principal (paginado)
 - `GET /search?q=query&type=post` - Buscar posts
-- `GET /stats` - Estatísticas da plataforma
 
 ## Exemplos de Requisições
 
