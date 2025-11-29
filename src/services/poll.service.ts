@@ -178,61 +178,37 @@ export class PollService {
       throw new AppError('Invalid option IDs', 400);
     }
 
-    // Remove previous votes if not multiple choice
-    if (!poll.multipleChoice) {
-      await prisma.pollVote.deleteMany({
-        where: {
-          userId,
-          option: {
-            pollId
-          }
+    // Check if user has already voted on this poll
+    const existingVotes = await prisma.pollVote.findMany({
+      where: {
+        userId,
+        option: {
+          pollId
         }
-      });
+      }
+    });
 
-      // Decrement vote counts for previously voted options
-      await prisma.pollOption.updateMany({
-        where: {
-          pollId,
-          votes: {
-            some: {
-              userId
-            }
-          }
-        },
-        data: {
-          voteCount: { decrement: 1 }
-        }
-      });
+    if (existingVotes.length > 0) {
+      throw new AppError('You have already voted on this poll', 400);
     }
 
-    // Add new votes
-    await prisma.$transaction(
-      optionIds.map(optionId =>
-        prisma.pollVote.upsert({
-          where: {
-            userId_optionId: {
-              userId,
-              optionId
-            }
-          },
-          create: {
+    await prisma.$transaction(async (tx) => {
+      // Create vote records
+      for (const optionId of optionIds) {
+        await tx.pollVote.create({
+          data: {
             userId,
             optionId
-          },
-          update: {}
-        })
-      )
-    );
+          }
+        });
 
-    // Increment vote counts
-    await prisma.$transaction(
-      optionIds.map(optionId =>
-        prisma.pollOption.update({
+        // Increment vote count
+        await tx.pollOption.update({
           where: { id: optionId },
           data: { voteCount: { increment: 1 } }
-        })
-      )
-    );
+        });
+      }
+    });
 
     return this.getPollResults(pollId);
   }
