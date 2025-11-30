@@ -67,7 +67,14 @@ const options: swaggerJsdoc.Options = {
             downvotes: { type: 'integer', example: 2 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
-            user: { $ref: '#/components/schemas/User' }
+            user: { $ref: '#/components/schemas/User' },
+            poll: { $ref: '#/components/schemas/Poll'},
+            _count: {
+              type: 'object',
+              properties: {
+                comments: {type: 'integer', example: 0}  
+              }
+            }
           }
         },
         CreatePost: {
