@@ -230,6 +230,7 @@ postCommentRouter.post('/posts/:post_id/comments', AuthMiddleware.authenticate, 
  * /posts/{post_id}/comments:
  *   get:
  *     summary: Get all comments for a post
+ *     description: Returns comments with nested replies up to a specified depth level. Use depth parameter to control how many levels of replies to fetch.
  *     tags: [Comments]
  *     parameters:
  *       - in: path
@@ -238,15 +239,55 @@ postCommentRouter.post('/posts/:post_id/comments', AuthMiddleware.authenticate, 
  *         schema:
  *           type: integer
  *         description: Post ID
+ *       - in: query
+ *         name: depth
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 3
+ *         description: Maximum depth of nested replies to fetch (0 = only top-level comments, 1 = comments + direct replies, etc.)
+ *         example: 2
  *     responses:
  *       200:
- *         description: List of comments in tree structure
+ *         description: List of comments in tree structure with specified depth
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Comment'
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/Comment'
+ *                   - type: object
+ *                     properties:
+ *                       replies:
+ *                         type: array
+ *                         items:
+ *                           $ref: '#/components/schemas/Comment'
+ *                       hasMoreReplies:
+ *                         type: boolean
+ *                         description: Indicates if there are more replies beyond the requested depth
+ *             examples:
+ *               depth0:
+ *                 summary: Depth 0 - Only top-level comments
+ *                 value:
+ *                   - id: 1
+ *                     content: "Great post!"
+ *                     replies: []
+ *                     hasMoreReplies: true
+ *               depth1:
+ *                 summary: Depth 1 - Comments with direct replies
+ *                 value:
+ *                   - id: 1
+ *                     content: "Great post!"
+ *                     replies:
+ *                       - id: 2
+ *                         content: "I agree!"
+ *                         replies: []
+ *                         hasMoreReplies: false
+ *                     hasMoreReplies: false
+ *       400:
+ *         $ref: '#/components/responses/BadRequestError'
  */
 postCommentRouter.get('/posts/:post_id/comments', commentController.getPostComments);
 

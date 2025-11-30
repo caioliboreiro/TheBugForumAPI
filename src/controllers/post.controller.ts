@@ -85,13 +85,4 @@ export class PostController {
       next(error);
     }
   };
-
-  getPostComments = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const comments = await this.postService.getPostComments(parseInt(req.params.id));
-      res.json(comments);
-    } catch (error) {
-      next(error);
-    }
-  };
 }

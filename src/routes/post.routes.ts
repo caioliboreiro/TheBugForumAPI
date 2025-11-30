@@ -217,31 +217,4 @@ router.post('/:id/upvote', postController.upvotePost);
  */
 router.post('/:id/downvote', postController.downvotePost);
 
-/**
- * @swagger
- * /posts/{id}/comments:
- *   get:
- *     summary: Get post comments
- *     tags: [Posts]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Post ID
- *     responses:
- *       200:
- *         description: List of comments
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Comment'
- *       404:
- *         $ref: '#/components/responses/NotFoundError'
- */
-router.get('/:id/comments', postController.getPostComments);
-
 export default router;

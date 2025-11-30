@@ -26,7 +26,8 @@ export class CommentController {
   getPostComments = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const comments = await this.commentService.getPostComments(
-        parseInt(req.params.post_id)
+        parseInt(req.params.post_id),
+        req.query.depth ? parseInt(req.query.depth.toString()) : undefined
       );
       res.json(comments);
     } catch (error) {

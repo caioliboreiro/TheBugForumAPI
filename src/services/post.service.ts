@@ -182,37 +182,4 @@ export class PostService {
 
     return post;
   }
-
-  async getPostComments(id: number) {
-    return prisma.comment.findMany({
-      where: { 
-        postId: id,
-        parentCommentId: null
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true
-          }
-        },
-        replies: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'asc' }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-  }
 }
