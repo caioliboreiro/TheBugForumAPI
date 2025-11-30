@@ -124,6 +124,8 @@ router.get('/:id', postController.getPostById);
  *                 type: string
  *               content:
  *                 type: string
+ *               category:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Post updated

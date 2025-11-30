@@ -8,89 +8,97 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  firstName     String    @map("first_name") @db.VarChar(50)
-  lastName      String    @map("last_name") @db.VarChar(50)
-  username      String    @unique @db.VarChar(50)
-  email         String    @unique @db.VarChar(100)
-  passwordHash  String    @map("password_hash")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  
-  posts         Post[]
-  comments      Comment[]
-  pollVotes     PollVote[]
+  id           Int      @id @default(autoincrement())
+  firstName    String   @map("first_name") @db.VarChar(50)
+  lastName     String   @map("last_name") @db.VarChar(50)
+  username     String   @unique @db.VarChar(50)
+  email        String   @unique @db.VarChar(100)
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  posts     Post[]
+  comments  Comment[]
+  pollVotes PollVote[]
 
   @@map("users")
 }
 
+enum Category {
+  General
+  Events
+  Finances
+  Sports
+}
+
 model Post {
-  id          Int       @id @default(autoincrement())
-  userId      Int       @map("user_id")
-  title       String
-  content     String
-  type        String    @db.VarChar(20)
-  upvotes     Int       @default(0)
-  downvotes   Int       @default(0)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
-  
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  poll        Poll?
-  comments    Comment[]
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String
+  content   String
+  category  Category
+  type      String   @db.VarChar(20)
+  upvotes   Int      @default(0)
+  downvotes Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poll     Poll?
+  comments Comment[]
 
   @@map("posts")
 }
 
 model Poll {
-  id              Int       @id @default(autoincrement())
-  postId          Int       @unique @map("post_id")
-  multipleChoice  Boolean   @default(false) @map("multiple_choice")
-  expiresAt       DateTime? @map("expires_at")
-  
-  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  options         PollOption[]
+  id             Int       @id @default(autoincrement())
+  postId         Int       @unique @map("post_id")
+  multipleChoice Boolean   @default(false) @map("multiple_choice")
+  expiresAt      DateTime? @map("expires_at")
+
+  post    Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options PollOption[]
 
   @@map("polls")
 }
 
 model PollOption {
-  id          Int       @id @default(autoincrement())
-  pollId      Int       @map("poll_id")
-  optionText  String    @map("option_text")
-  voteCount   Int       @default(0) @map("vote_count")
-  
-  poll        Poll      @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  votes       PollVote[]
+  id         Int    @id @default(autoincrement())
+  pollId     Int    @map("poll_id")
+  optionText String @map("option_text")
+  voteCount  Int    @default(0) @map("vote_count")
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
 
   @@map("poll_options")
 }
 
 model PollVote {
-  userId    Int       @map("user_id")
-  optionId  Int       @map("option_id")
-  votedAt   DateTime  @default(now()) @map("voted_at")
-  
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId   Int      @map("user_id")
+  optionId Int      @map("option_id")
+  votedAt  DateTime @default(now()) @map("voted_at")
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   @@id([userId, optionId])
   @@map("poll_votes")
 }
 
 model Comment {
-  id                Int       @id @default(autoincrement())
-  postId            Int       @map("post_id")
-  userId            Int       @map("user_id")
-  content           String
-  createdAt         DateTime  @default(now()) @map("created_at")
-  upvotes           Int       @default(0)
-  downvotes         Int       @default(0)
-  parentCommentId   Int?      @map("parent_comment_id")
-  
-  post              Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent            Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
-  replies           Comment[] @relation("CommentReplies")
+  id              Int      @id @default(autoincrement())
+  postId          Int      @map("post_id")
+  userId          Int      @map("user_id")
+  content         String
+  createdAt       DateTime @default(now()) @map("created_at")
+  upvotes         Int      @default(0)
+  downvotes       Int      @default(0)
+  parentCommentId Int?     @map("parent_comment_id")
+
+  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies Comment[] @relation("CommentReplies")
 
   @@map("comments")
 }

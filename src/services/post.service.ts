@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Category, PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
@@ -8,6 +8,7 @@ export class PostService {
     userId: number;
     title: string;
     content: string;
+    category: Category;
     type?: string;
   }) {
     return prisma.post.create({
@@ -15,6 +16,7 @@ export class PostService {
         userId: data.userId,
         title: data.title,
         content: data.content,
+        category: data.category,
         type: data.type || 'text'
       },
       include: {
@@ -131,6 +133,7 @@ export class PostService {
     const updateData: any = {};
     if (data.title) updateData.title = data.title;
     if (data.content) updateData.content = data.content;
+    if (data.category) updateData.category = data.category;
 
     return prisma.post.update({
       where: { id },

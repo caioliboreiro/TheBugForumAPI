@@ -61,6 +61,7 @@ const options: swaggerJsdoc.Options = {
             userId: { type: 'integer', example: 1 },
             title: { type: 'string', example: 'My First Post' },
             content: { type: 'string', example: 'This is the content of my post' },
+            category: {type: 'string', example: 'Sports'},
             type: { type: 'string', enum: ['text', 'poll'], example: 'text' },
             upvotes: { type: 'integer', example: 10 },
             downvotes: { type: 'integer', example: 2 },
@@ -74,6 +75,7 @@ const options: swaggerJsdoc.Options = {
           required: ['title', 'content'],
           properties: {
             title: { type: 'string', example: 'My First Post' },
+            category: { type: 'string', example: 'General'},
             content: { type: 'string', example: 'This is the content of my post' },
             type: { type: 'string', enum: ['text', 'poll'], example: 'text' }
           }
@@ -97,6 +99,7 @@ const options: swaggerJsdoc.Options = {
           properties: {
             title: { type: 'string', example: 'What is your favorite language?' },
             content: { type: 'string', example: 'Vote for your favorite programming language' },
+            category: { type: 'string', example: 'General'},
             multipleChoice: { type: 'boolean', example: false },
             expiresAt: { type: 'string', format: 'date-time', nullable: true },
             options: {

@@ -161,8 +161,19 @@ export class UserService {
             firstName: true,
             lastName: true
           }
+        },
+        poll: {
+          include: {
+            options: true
+          }
+        },
+        _count: {
+          select: {
+            comments: true
+          }
         }
       },
+      
       orderBy: { createdAt: 'desc' }
     });
   }

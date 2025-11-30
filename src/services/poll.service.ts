@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Category, PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
@@ -8,6 +8,7 @@ export class PollService {
     userId: number;
     title: string;
     content?: string;
+    category: Category,
     multipleChoice?: boolean;
     expiresAt?: Date;
     options: string[];
@@ -18,6 +19,7 @@ export class PollService {
         userId: data.userId,
         title: data.title,
         content: data.content || '',
+        category: data.category,
         type: 'poll'
       }
     });
