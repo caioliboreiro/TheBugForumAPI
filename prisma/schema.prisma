@@ -30,6 +30,7 @@ enum Category {
   Events
   Finances
   Sports
+  Polls
 }
 
 model Post {
