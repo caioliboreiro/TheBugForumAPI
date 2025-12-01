@@ -71,7 +71,8 @@ export class CommentController {
 
   upvoteComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const comment = await this.commentService.upvoteComment(parseInt(req.params.id));
+      const userId = req.userId;
+      const comment = await this.commentService.upvoteComment(parseInt(req.params.id), userId);
       res.json(comment);
     } catch (error) {
       next(error);
@@ -80,7 +81,32 @@ export class CommentController {
 
   downvoteComment = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const comment = await this.commentService.downvoteComment(parseInt(req.params.id));
+      const userId = req.userId;
+      const comment = await this.commentService.downvoteComment(parseInt(req.params.id), userId);
+      res.json(comment);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  removeUpvote = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const comment = await this.commentService.removeUpvote(
+        parseInt(req.params.id),
+        req.userId!
+      );
+      res.json(comment);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  removeDownvote = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const comment = await this.commentService.removeDownvote(
+        parseInt(req.params.id),
+        req.userId!
+      );
       res.json(comment);
     } catch (error) {
       next(error);

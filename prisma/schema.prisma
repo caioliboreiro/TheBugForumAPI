@@ -16,9 +16,11 @@ model User {
   passwordHash String   @map("password_hash")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  posts     Post[]
-  comments  Comment[]
-  pollVotes PollVote[]
+  posts       Post[]
+  comments    Comment[]
+  pollVotes   PollVote[]
+  postVotes   PostVote[]
+  commentVotes CommentVote[]
 
   @@map("users")
 }
@@ -42,9 +44,10 @@ model Post {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   poll     Poll?
   comments Comment[]
+  votes    PostVote[]
 
   @@map("posts")
 }
@@ -85,6 +88,19 @@ model PollVote {
   @@map("poll_votes")
 }
 
+model PostVote {
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  voteType  String   @map("vote_type") @db.VarChar(10)
+  votedAt   DateTime @default(now()) @map("voted_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@map("post_votes")
+}
+
 model Comment {
   id              Int      @id @default(autoincrement())
   postId          Int      @map("post_id")
@@ -95,10 +111,24 @@ model Comment {
   downvotes       Int      @default(0)
   parentCommentId Int?     @map("parent_comment_id")
 
-  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
-  replies Comment[] @relation("CommentReplies")
+  post    Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?     @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies Comment[]    @relation("CommentReplies")
+  votes   CommentVote[]
 
   @@map("comments")
+}
+
+model CommentVote {
+  userId    Int      @map("user_id")
+  commentId Int      @map("comment_id")
+  voteType  String   @map("vote_type") @db.VarChar(10)
+  votedAt   DateTime @default(now()) @map("voted_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+  @@map("comment_votes")
 }

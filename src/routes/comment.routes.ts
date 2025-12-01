@@ -105,6 +105,8 @@ router.delete('/:id', AuthMiddleware.authenticate, commentController.deleteComme
  *   post:
  *     summary: Upvote a comment
  *     tags: [Comments]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -114,11 +116,14 @@ router.delete('/:id', AuthMiddleware.authenticate, commentController.deleteComme
  *         description: Comment ID
  *     responses:
  *       200:
- *         description: Comment upvoted
+ *         description: Comment upvoted successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: User has already upvoted or has an existing downvote
+ *         $ref: '#/components/responses/BadRequestError'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
@@ -130,6 +135,8 @@ router.post('/:id/upvote', commentController.upvoteComment);
  *   post:
  *     summary: Downvote a comment
  *     tags: [Comments]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -139,15 +146,82 @@ router.post('/:id/upvote', commentController.upvoteComment);
  *         description: Comment ID
  *     responses:
  *       200:
- *         description: Comment downvoted
+ *         description: Comment downvoted successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: User has already downvoted or has an existing upvote
+ *         $ref: '#/components/responses/BadRequestError'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
 router.post('/:id/downvote', commentController.downvoteComment);
+
+/**
+ * @swagger
+ * /comments/{id}/remove-upvote:
+ *   post:
+ *     summary: Remove upvote from a comment
+ *     tags: [Comments]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Comment ID
+ *     responses:
+ *       200:
+ *         description: Upvote removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: User has not upvoted this comment
+ *         $ref: '#/components/responses/BadRequestError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
+router.post('/:id/remove-upvote', AuthMiddleware.authenticate, commentController.removeUpvote);
+
+/**
+ * @swagger
+ * /comments/{id}/remove-downvote:
+ *   post:
+ *     summary: Remove downvote from a comment
+ *     tags: [Comments]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Comment ID
+ *     responses:
+ *       200:
+ *         description: Downvote removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: User has not downvoted this comment
+ *         $ref: '#/components/responses/BadRequestError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
+router.post('/:id/remove-downvote', AuthMiddleware.authenticate, commentController.removeDownvote);
 
 /**
  * @swagger

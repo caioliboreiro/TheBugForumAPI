@@ -1,4 +1,3 @@
-// src/services/comment.service.ts
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
@@ -230,21 +229,127 @@ export class CommentService {
     return { message: 'Comment deleted successfully' };
   }
 
-  async upvoteComment(id: number) {
+  async upvoteComment(id: number, userId?: number) {
+    const comment = await prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
+      throw new AppError('Comment not found', 404);
+    }
+
+    // If userId provided, check for existing vote
+    if (userId) {
+      const existingVote = await prisma.commentVote.findUnique({
+        where: { userId_commentId: { userId, commentId: id } }
+      });
+
+      if (existingVote) {
+        if (existingVote.voteType === 'upvote') {
+          throw new AppError('User has already upvoted this comment', 400);
+        } else if (existingVote.voteType === 'downvote') {
+          throw new AppError('Cannot upvote a comment you have already downvoted. Remove your downvote first.', 400);
+        }
+      }
+
+      // Record the upvote
+      await prisma.commentVote.create({
+        data: { userId, commentId: id, voteType: 'upvote' }
+      });
+    }
+
     return prisma.comment.update({
       where: { id },
-      data: {
-        upvotes: { increment: 1 }
-      }
+      data: { upvotes: { increment: 1 } }
     });
   }
 
-  async downvoteComment(id: number) {
+  async downvoteComment(id: number, userId?: number) {
+    const comment = await prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
+      throw new AppError('Comment not found', 404);
+    }
+
+    // If userId provided, check for existing vote
+    if (userId) {
+      const existingVote = await prisma.commentVote.findUnique({
+        where: { userId_commentId: { userId, commentId: id } }
+      });
+
+      if (existingVote) {
+        if (existingVote.voteType === 'downvote') {
+          throw new AppError('User has already downvoted this comment', 400);
+        } else if (existingVote.voteType === 'upvote') {
+          throw new AppError('Cannot downvote a comment you have already upvoted. Remove your upvote first.', 400);
+        }
+      }
+
+      // Record the downvote
+      await prisma.commentVote.create({
+        data: { userId, commentId: id, voteType: 'downvote' }
+      });
+    }
+
     return prisma.comment.update({
       where: { id },
-      data: {
-        downvotes: { increment: 1 }
-      }
+      data: { downvotes: { increment: 1 } }
+    });
+  }
+
+  async removeUpvote(id: number, userId: number) {
+    const comment = await prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
+      throw new AppError('Comment not found', 404);
+    }
+
+    const vote = await prisma.commentVote.findUnique({
+      where: { userId_commentId: { userId, commentId: id } }
+    });
+
+    if (!vote) {
+      throw new AppError('No vote found for this comment', 404);
+    }
+
+    if (vote.voteType !== 'upvote') {
+      throw new AppError('User has not upvoted this comment', 400);
+    }
+
+    // Delete the vote record
+    await prisma.commentVote.delete({
+      where: { userId_commentId: { userId, commentId: id } }
+    });
+
+    // Decrement upvote count
+    return prisma.comment.update({
+      where: { id },
+      data: { upvotes: { decrement: 1 } }
+    });
+  }
+
+  async removeDownvote(id: number, userId: number) {
+    const comment = await prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
+      throw new AppError('Comment not found', 404);
+    }
+
+    const vote = await prisma.commentVote.findUnique({
+      where: { userId_commentId: { userId, commentId: id } }
+    });
+
+    if (!vote) {
+      throw new AppError('No vote found for this comment', 404);
+    }
+
+    if (vote.voteType !== 'downvote') {
+      throw new AppError('User has not downvoted this comment', 400);
+    }
+
+    // Delete the vote record
+    await prisma.commentVote.delete({
+      where: { userId_commentId: { userId, commentId: id } }
+    });
+
+    // Decrement downvote count
+    return prisma.comment.update({
+      where: { id },
+      data: { downvotes: { decrement: 1 } }
     });
   }
 

@@ -164,25 +164,127 @@ export class PostService {
     return { message: 'Post deleted successfully' };
   }
 
-  async upvotePost(id: number) {
-    const post = await prisma.post.update({
-      where: { id },
-      data: {
-        upvotes: { increment: 1 }
-      }
-    });
+  async upvotePost(id: number, userId?: number) {
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      throw new AppError('Post not found', 404);
+    }
 
-    return post;
+    // If userId provided, check for existing vote
+    if (userId) {
+      const existingVote = await prisma.postVote.findUnique({
+        where: { userId_postId: { userId, postId: id } }
+      });
+
+      if (existingVote) {
+        if (existingVote.voteType === 'upvote') {
+          throw new AppError('User has already upvoted this post', 400);
+        } else if (existingVote.voteType === 'downvote') {
+          throw new AppError('Cannot upvote a post you have already downvoted. Remove your downvote first.', 400);
+        }
+      }
+
+      // Record the upvote
+      await prisma.postVote.create({
+        data: { userId, postId: id, voteType: 'upvote' }
+      });
+    }
+
+    return prisma.post.update({
+      where: { id },
+      data: { upvotes: { increment: 1 } }
+    });
   }
 
-  async downvotePost(id: number) {
-    const post = await prisma.post.update({
-      where: { id },
-      data: {
-        downvotes: { increment: 1 }
+  async downvotePost(id: number, userId?: number) {
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      throw new AppError('Post not found', 404);
+    }
+
+    // If userId provided, check for existing vote
+    if (userId) {
+      const existingVote = await prisma.postVote.findUnique({
+        where: { userId_postId: { userId, postId: id } }
+      });
+
+      if (existingVote) {
+        if (existingVote.voteType === 'downvote') {
+          throw new AppError('User has already downvoted this post', 400);
+        } else if (existingVote.voteType === 'upvote') {
+          throw new AppError('Cannot downvote a post you have already upvoted. Remove your upvote first.', 400);
+        }
       }
+
+      // Record the downvote
+      await prisma.postVote.create({
+        data: { userId, postId: id, voteType: 'downvote' }
+      });
+    }
+
+    return prisma.post.update({
+      where: { id },
+      data: { downvotes: { increment: 1 } }
+    });
+  }
+
+  async removeUpvote(id: number, userId: number) {
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      throw new AppError('Post not found', 404);
+    }
+
+    const vote = await prisma.postVote.findUnique({
+      where: { userId_postId: { userId, postId: id } }
     });
 
-    return post;
+    if (!vote) {
+      throw new AppError('No vote found for this post', 404);
+    }
+
+    if (vote.voteType !== 'upvote') {
+      throw new AppError('User has not upvoted this post', 400);
+    }
+
+    // Delete the vote record
+    await prisma.postVote.delete({
+      where: { userId_postId: { userId, postId: id } }
+    });
+
+    // Decrement upvote count
+    return prisma.post.update({
+      where: { id },
+      data: { upvotes: { decrement: 1 } }
+    });
+  }
+
+  async removeDownvote(id: number, userId: number) {
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      throw new AppError('Post not found', 404);
+    }
+
+    const vote = await prisma.postVote.findUnique({
+      where: { userId_postId: { userId, postId: id } }
+    });
+
+    if (!vote) {
+      throw new AppError('No vote found for this post', 404);
+    }
+
+    if (vote.voteType !== 'downvote') {
+      throw new AppError('User has not downvoted this post', 400);
+    }
+
+    // Delete the vote record
+    await prisma.postVote.delete({
+      where: { userId_postId: { userId, postId: id } }
+    });
+
+    // Decrement downvote count
+    return prisma.post.update({
+      where: { id },
+      data: { downvotes: { decrement: 1 } }
+    });
   }
 }

@@ -70,7 +70,8 @@ export class PostController {
 
   upvotePost = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const post = await this.postService.upvotePost(parseInt(req.params.id));
+      const userId = req.userId;
+      const post = await this.postService.upvotePost(parseInt(req.params.id), userId);
       res.json(post);
     } catch (error) {
       next(error);
@@ -79,7 +80,32 @@ export class PostController {
 
   downvotePost = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const post = await this.postService.downvotePost(parseInt(req.params.id));
+      const userId = req.userId;
+      const post = await this.postService.downvotePost(parseInt(req.params.id), userId);
+      res.json(post);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  removeUpvote = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const post = await this.postService.removeUpvote(
+        parseInt(req.params.id),
+        req.userId!
+      );
+      res.json(post);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  removeDownvote = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const post = await this.postService.removeDownvote(
+        parseInt(req.params.id),
+        req.userId!
+      );
       res.json(post);
     } catch (error) {
       next(error);
