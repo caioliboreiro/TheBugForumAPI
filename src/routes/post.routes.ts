@@ -176,7 +176,7 @@ router.delete('/:id', AuthMiddleware.authenticate, postController.deletePost);
  *     summary: Upvote a post
  *     tags: [Posts]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -197,7 +197,7 @@ router.delete('/:id', AuthMiddleware.authenticate, postController.deletePost);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.post('/:id/upvote', postController.upvotePost);
+router.post('/:id/upvote', AuthMiddleware.authenticate, postController.upvotePost);
 
 /**
  * @swagger
@@ -206,7 +206,7 @@ router.post('/:id/upvote', postController.upvotePost);
  *     summary: Downvote a post
  *     tags: [Posts]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -227,7 +227,7 @@ router.post('/:id/upvote', postController.upvotePost);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.post('/:id/downvote', postController.downvotePost);
+router.post('/:id/downvote', AuthMiddleware.authenticate, postController.downvotePost);
 
 /**
  * @swagger
@@ -236,7 +236,7 @@ router.post('/:id/downvote', postController.downvotePost);
  *     summary: Remove upvote from a post
  *     tags: [Posts]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -268,7 +268,7 @@ router.post('/:id/remove-upvote', AuthMiddleware.authenticate, postController.re
  *     summary: Remove downvote from a post
  *     tags: [Posts]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

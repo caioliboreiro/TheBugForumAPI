@@ -106,7 +106,7 @@ router.delete('/:id', AuthMiddleware.authenticate, commentController.deleteComme
  *     summary: Upvote a comment
  *     tags: [Comments]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -127,7 +127,7 @@ router.delete('/:id', AuthMiddleware.authenticate, commentController.deleteComme
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.post('/:id/upvote', commentController.upvoteComment);
+router.post('/:id/upvote', AuthMiddleware.authenticate, commentController.upvoteComment);
 
 /**
  * @swagger
@@ -136,7 +136,7 @@ router.post('/:id/upvote', commentController.upvoteComment);
  *     summary: Downvote a comment
  *     tags: [Comments]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -157,7 +157,7 @@ router.post('/:id/upvote', commentController.upvoteComment);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.post('/:id/downvote', commentController.downvoteComment);
+router.post('/:id/downvote', AuthMiddleware.authenticate, commentController.downvoteComment);
 
 /**
  * @swagger
@@ -166,7 +166,7 @@ router.post('/:id/downvote', commentController.downvoteComment);
  *     summary: Remove upvote from a comment
  *     tags: [Comments]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -198,7 +198,7 @@ router.post('/:id/remove-upvote', AuthMiddleware.authenticate, commentController
  *     summary: Remove downvote from a comment
  *     tags: [Comments]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
