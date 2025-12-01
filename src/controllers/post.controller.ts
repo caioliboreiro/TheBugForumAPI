@@ -28,7 +28,7 @@ export class PostController {
       const type = req.query.type as string | undefined;
       const category = req.query.category as string | undefined;
 
-      const result = await this.postService.getAllPosts(page, limit, type, category);
+      const result = await this.postService.getAllPosts(page, limit, type, category, req.userId);
       res.json(result);
     } catch (error) {
       next(error);
@@ -37,7 +37,7 @@ export class PostController {
 
   getPostById = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const post = await this.postService.getPostById(parseInt(req.params.id));
+      const post = await this.postService.getPostById(parseInt(req.params.id), req.userId);
       res.json(post);
     } catch (error) {
       next(error);

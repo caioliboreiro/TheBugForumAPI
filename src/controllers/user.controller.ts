@@ -73,7 +73,7 @@ export class UserController {
 
   getUserPosts = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const posts = await this.userService.getUserPosts(parseInt(req.params.id));
+      const posts = await this.userService.getUserPosts(parseInt(req.params.id), req.userId);
       res.json(posts);
     } catch (error) {
       next(error);
@@ -82,7 +82,7 @@ export class UserController {
 
   getUserComments = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const comments = await this.userService.getUserComments(parseInt(req.params.id));
+      const comments = await this.userService.getUserComments(parseInt(req.params.id), req.userId);
       res.json(comments);
     } catch (error) {
       next(error);

@@ -55,7 +55,9 @@ export class CommentService {
     postId: number,
     parentCommentId: number | null,
     currentDepth: number,
-    maxDepth: number
+    maxDepth: number,
+    currentUserId?: number,
+    userVotesCache?: Map<number, string>
   ): Promise<any[]> {
     // Base case: reached max depth
     if (currentDepth >= maxDepth) {
@@ -92,13 +94,18 @@ export class CommentService {
           postId,
           comment.id,
           currentDepth + 1,
-          maxDepth
+          maxDepth,
+          currentUserId,
+          userVotesCache
         );
 
+        const voteType = userVotesCache?.get(comment.id);
         return {
           ...comment,
           replies,
-          hasMoreReplies: comment._count.replies > replies.length
+          hasMoreReplies: comment._count.replies > replies.length,
+          wasUpvoted: voteType === 'upvote',
+          wasDownvoted: voteType === 'downvote'
         };
       })
     );
@@ -106,13 +113,22 @@ export class CommentService {
     return commentsWithReplies;
   }
 
-  async getPostComments(postId: number, depth?: number) {
+  async getPostComments(postId: number, depth?: number, currentUserId?: number) {
     // Default depth is 3 levels if not specified
     const maxDepth = depth !== undefined ? depth : 3;
 
     // Validate depth
     if (maxDepth < 0) {
       throw new AppError('Depth must be a non-negative number', 400);
+    }
+
+    // Fetch vote records for current user if authenticated
+    let userVotesCache: Map<number, string> = new Map();
+    if (currentUserId) {
+      const votes = await prisma.commentVote.findMany({
+        where: { userId: currentUserId }
+      });
+      userVotesCache = new Map(votes.map(v => [v.commentId, v.voteType]));
     }
 
     // If depth is 0, return only top-level comments without any replies
@@ -142,16 +158,18 @@ export class CommentService {
         comments.map(comment => ({
           ...comment,
           replies: [],
-          hasMoreReplies: comment._count.replies > 0
+          hasMoreReplies: comment._count.replies > 0,
+          wasUpvoted: userVotesCache.get(comment.id) === 'upvote',
+          wasDownvoted: userVotesCache.get(comment.id) === 'downvote'
         }))
       );
     }
 
     // Get all comments with nested structure up to specified depth
-    return this.getCommentsWithDepth(postId, null, 0, maxDepth+1);
+    return this.getCommentsWithDepth(postId, null, 0, maxDepth+1, currentUserId, userVotesCache);
   }
 
-  async getCommentById(id: number) {
+  async getCommentById(id: number, currentUserId?: number) {
     const comment = await prisma.comment.findUnique({
       where: { id },
       include: {
@@ -186,7 +204,24 @@ export class CommentService {
       throw new AppError('Comment not found', 404);
     }
 
-    return comment;
+    // Fetch vote record for current user if authenticated
+    let wasUpvoted = false;
+    let wasDownvoted = false;
+    if (currentUserId) {
+      const userVote = await prisma.commentVote.findUnique({
+        where: { userId_commentId: { userId: currentUserId, commentId: id } }
+      });
+      if (userVote) {
+        wasUpvoted = userVote.voteType === 'upvote';
+        wasDownvoted = userVote.voteType === 'downvote';
+      }
+    }
+
+    return {
+      ...comment,
+      wasUpvoted,
+      wasDownvoted
+    };
   }
 
   async updateComment(id: number, content: string, userId: number) {

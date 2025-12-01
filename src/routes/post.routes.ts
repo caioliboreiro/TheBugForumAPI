@@ -77,7 +77,7 @@ router.post('/', AuthMiddleware.authenticate, postController.createPost);
  *                 pagination:
  *                   $ref: '#/components/schemas/Pagination'
  */
-router.get('/', postController.getAllPosts);
+router.get('/', AuthMiddleware.optionalAuth, postController.getAllPosts);
 
 /**
  * @swagger
@@ -102,7 +102,7 @@ router.get('/', postController.getAllPosts);
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', postController.getPostById);
+router.get('/:id', AuthMiddleware.optionalAuth, postController.getPostById);
 
 /**
  * @swagger

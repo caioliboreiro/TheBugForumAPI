@@ -27,7 +27,8 @@ export class CommentController {
     try {
       const comments = await this.commentService.getPostComments(
         parseInt(req.params.post_id),
-        req.query.depth ? parseInt(req.query.depth.toString()) : undefined
+        req.query.depth ? parseInt(req.query.depth.toString()) : undefined,
+        req.userId
       );
       res.json(comments);
     } catch (error) {
@@ -37,7 +38,7 @@ export class CommentController {
 
   getCommentById = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const comment = await this.commentService.getCommentById(parseInt(req.params.id));
+      const comment = await this.commentService.getCommentById(parseInt(req.params.id), req.userId);
       res.json(comment);
     } catch (error) {
       next(error);

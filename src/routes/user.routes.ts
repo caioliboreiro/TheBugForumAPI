@@ -196,7 +196,7 @@ router.delete('/:id', AuthMiddleware.authenticate, userController.deleteUser);
  *               items:
  *                 $ref: '#/components/schemas/Post'
  */
-router.get('/:id/posts', userController.getUserPosts);
+router.get('/:id/posts', AuthMiddleware.optionalAuth, userController.getUserPosts);
 
 /**
  * @swagger
@@ -221,6 +221,6 @@ router.get('/:id/posts', userController.getUserPosts);
  *               items:
  *                 $ref: '#/components/schemas/Comment'
  */
-router.get('/:id/comments', userController.getUserComments);
+router.get('/:id/comments', AuthMiddleware.optionalAuth, userController.getUserComments);
 
 export default router;

@@ -32,7 +32,7 @@ export class PostService {
     });
   }
 
-  async getAllPosts(page: number = 1, limit: number = 20, type?: string, category?: Category | string) {
+  async getAllPosts(page: number = 1, limit: number = 20, type?: string, category?: Category | string, currentUserId?: number) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -69,8 +69,27 @@ export class PostService {
       prisma.post.count({ where })
     ]);
 
+    // Fetch vote records for current user if authenticated
+    let userVotes: Map<number, string> = new Map();
+    if (currentUserId) {
+      const votes = await prisma.postVote.findMany({
+        where: {
+          userId: currentUserId,
+          postId: { in: posts.map(p => p.id) }
+        }
+      });
+      userVotes = new Map(votes.map(v => [v.postId, v.voteType]));
+    }
+
+    // Add vote flags to posts
+    const postsWithVoteFlags = posts.map(post => ({
+      ...post,
+      wasUpvoted: userVotes.get(post.id) === 'upvote',
+      wasDownvoted: userVotes.get(post.id) === 'downvote'
+    }));
+
     return {
-      posts,
+      posts: postsWithVoteFlags,
       pagination: {
         page,
         limit,
@@ -80,7 +99,7 @@ export class PostService {
     };
   }
 
-  async getPostById(id: number) {
+  async getPostById(id: number, currentUserId?: number) {
     const post = await prisma.post.findUnique({
       where: { id },
       include: {
@@ -118,7 +137,24 @@ export class PostService {
       throw new AppError('Post not found', 404);
     }
 
-    return post;
+    // Fetch vote record for current user if authenticated
+    let wasUpvoted = false;
+    let wasDownvoted = false;
+    if (currentUserId) {
+      const userVote = await prisma.postVote.findUnique({
+        where: { userId_postId: { userId: currentUserId, postId: id } }
+      });
+      if (userVote) {
+        wasUpvoted = userVote.voteType === 'upvote';
+        wasDownvoted = userVote.voteType === 'downvote';
+      }
+    }
+
+    return {
+      ...post,
+      wasUpvoted,
+      wasDownvoted
+    };
   }
 
   async updatePost(id: number, data: any, userId: number) {

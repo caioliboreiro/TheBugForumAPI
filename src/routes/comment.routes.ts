@@ -28,7 +28,7 @@ const commentController = new CommentController();
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  */
-router.get('/:id', commentController.getCommentById);
+router.get('/:id', AuthMiddleware.optionalAuth, commentController.getCommentById);
 
 /**
  * @swagger
@@ -363,7 +363,7 @@ postCommentRouter.post('/posts/:post_id/comments', AuthMiddleware.authenticate, 
  *       400:
  *         $ref: '#/components/responses/BadRequestError'
  */
-postCommentRouter.get('/posts/:post_id/comments', commentController.getPostComments);
+postCommentRouter.get('/posts/:post_id/comments', AuthMiddleware.optionalAuth, commentController.getPostComments);
 
 export { postCommentRouter };
 export default router;

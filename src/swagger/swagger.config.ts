@@ -65,6 +65,8 @@ const options: swaggerJsdoc.Options = {
             type: { type: 'string', enum: ['text', 'poll'], example: 'text' },
             upvotes: { type: 'integer', example: 10 },
             downvotes: { type: 'integer', example: 2 },
+            wasUpvoted: { type: 'boolean', example: false, description: 'Whether the current user has upvoted this post' },
+            wasDownvoted: { type: 'boolean', example: false, description: 'Whether the current user has downvoted this post' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
             user: { $ref: '#/components/schemas/User' },
@@ -145,6 +147,8 @@ const options: swaggerJsdoc.Options = {
             content: { type: 'string', example: 'Great post!' },
             upvotes: { type: 'integer', example: 5 },
             downvotes: { type: 'integer', example: 0 },
+            wasUpvoted: { type: 'boolean', example: false, description: 'Whether the current user has upvoted this comment' },
+            wasDownvoted: { type: 'boolean', example: false, description: 'Whether the current user has downvoted this comment' },
             parentCommentId: { type: 'integer', nullable: true, example: null },
             createdAt: { type: 'string', format: 'date-time' },
             user: { $ref: '#/components/schemas/User' }

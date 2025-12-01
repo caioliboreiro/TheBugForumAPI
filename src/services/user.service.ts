@@ -150,8 +150,8 @@ export class UserService {
     return { message: 'User deleted successfully' };
   }
 
-  async getUserPosts(id: number) {
-    return prisma.post.findMany({
+  async getUserPosts(id: number, currentUserId?: number) {
+    const posts = await prisma.post.findMany({
       where: { userId: id },
       include: {
         user: {
@@ -173,13 +173,31 @@ export class UserService {
           }
         }
       },
-      
       orderBy: { createdAt: 'desc' }
     });
+
+    // Fetch vote records for current user if authenticated
+    let userVotes: Map<number, string> = new Map();
+    if (currentUserId) {
+      const votes = await prisma.postVote.findMany({
+        where: {
+          userId: currentUserId,
+          postId: { in: posts.map(p => p.id) }
+        }
+      });
+      userVotes = new Map(votes.map(v => [v.postId, v.voteType]));
+    }
+
+    // Add vote flags to posts
+    return posts.map(post => ({
+      ...post,
+      wasUpvoted: userVotes.get(post.id) === 'upvote',
+      wasDownvoted: userVotes.get(post.id) === 'downvote'
+    }));
   }
 
-  async getUserComments(id: number) {
-    return prisma.comment.findMany({
+  async getUserComments(id: number, currentUserId?: number) {
+    const comments = await prisma.comment.findMany({
       where: { userId: id },
       include: {
         user: {
@@ -197,6 +215,25 @@ export class UserService {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    // Fetch vote records for current user if authenticated
+    let userVotes: Map<number, string> = new Map();
+    if (currentUserId) {
+      const votes = await prisma.commentVote.findMany({
+        where: {
+          userId: currentUserId,
+          commentId: { in: comments.map(c => c.id) }
+        }
+      });
+      userVotes = new Map(votes.map(v => [v.commentId, v.voteType]));
+    }
+
+    // Add vote flags to comments
+    return comments.map(comment => ({
+      ...comment,
+      wasUpvoted: userVotes.get(comment.id) === 'upvote',
+      wasDownvoted: userVotes.get(comment.id) === 'downvote'
+    }));
   }
 }
 
