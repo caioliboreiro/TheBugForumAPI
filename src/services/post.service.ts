@@ -32,10 +32,12 @@ export class PostService {
     });
   }
 
-  async getAllPosts(page: number = 1, limit: number = 20, type?: string) {
+  async getAllPosts(page: number = 1, limit: number = 20, type?: string, category?: Category | string) {
     const skip = (page - 1) * limit;
-    
-    const where = type ? { type } : {};
+
+    const where: any = {};
+    if (type) where.type = type;
+    if (category) where.category = category as Category;
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({

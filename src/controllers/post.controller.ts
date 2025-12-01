@@ -25,9 +25,10 @@ export class PostController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const type = req.query.type as string;
+      const type = req.query.type as string | undefined;
+      const category = req.query.category as string | undefined;
 
-      const result = await this.postService.getAllPosts(page, limit, type);
+      const result = await this.postService.getAllPosts(page, limit, type, category);
       res.json(result);
     } catch (error) {
       next(error);

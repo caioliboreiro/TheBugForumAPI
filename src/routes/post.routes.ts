@@ -56,6 +56,12 @@ router.post('/', AuthMiddleware.authenticate, postController.createPost);
  *           type: string
  *           enum: [text, poll]
  *         description: Filter by post type
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [General, Events, Finances, Sports]
+ *         description: Filter by post category
  *     responses:
  *       200:
  *         description: List of posts with pagination
