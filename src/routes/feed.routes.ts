@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Category, PrismaClient } from '@prisma/client';
 
 const feedRouter = Router();
 const prisma = new PrismaClient();
@@ -42,12 +42,17 @@ feedRouter.get('/feed', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
+    const category = req.query.category as string | undefined;
     const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (category) where.category = category as Category;
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
         skip,
         take: limit,
+        where,
         include: {
           user: {
             select: {
