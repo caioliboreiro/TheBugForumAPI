@@ -1,5 +1,6 @@
-import { Router } from 'express';
+import { NextFunction, Router } from 'express';
 import { Category, PrismaClient } from '@prisma/client';
+import { AuthMiddleware, AuthRequest } from '../middleware/auth.middleware';
 
 const feedRouter = Router();
 const prisma = new PrismaClient();
@@ -23,6 +24,12 @@ const prisma = new PrismaClient();
  *           type: integer
  *           default: 20
  *         description: Items per page
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [General, Events, Finances, Sports]
+ *         description: Filter by post category
  *     responses:
  *       200:
  *         description: Feed with posts and polls ordered by relevance
@@ -38,11 +45,14 @@ const prisma = new PrismaClient();
  *                 pagination:
  *                   $ref: '#/components/schemas/Pagination'
  */
-feedRouter.get('/feed', async (req, res, next) => {
+feedRouter.get('/feed', 
+  AuthMiddleware.optionalAuth,
+  async (req: AuthRequest, res, next: NextFunction) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const category = req.query.category as string | undefined;
+    const currentUserId = req.userId;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -78,11 +88,30 @@ feedRouter.get('/feed', async (req, res, next) => {
           { createdAt: 'desc' }
         ]
       }),
-      prisma.post.count()
+      prisma.post.count({ where })
     ]);
 
+    // Fetch vote records for current user if authenticated
+    let userVotes: Map<number, string> = new Map();
+    if (currentUserId) {
+      const votes = await prisma.postVote.findMany({
+        where: {
+          userId: currentUserId,
+          postId: { in: posts.map(p => p.id) }
+        }
+      });
+      userVotes = new Map(votes.map(v => [v.postId, v.voteType]));
+    }
+
+    // Add vote flags to posts
+    const postsWithVoteFlags = posts.map(post => ({
+      ...post,
+      wasUpvoted: userVotes.get(post.id) === 'upvote',
+      wasDownvoted: userVotes.get(post.id) === 'downvote'
+    }));
+
     res.json({
-      posts,
+      posts: postsWithVoteFlags,
       pagination: {
         page,
         limit,
