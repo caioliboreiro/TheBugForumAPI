@@ -143,22 +143,44 @@ feedRouter.get('/feed',
  *           type: string
  *           enum: [text, poll]
  *         description: Filter by post type
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Items per page
  *     responses:
  *       200:
- *         description: Search results
+ *         description: Search results with pagination
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
+ *               type: object
+ *               properties:
+ *                 posts:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Post'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
  *       400:
  *         $ref: '#/components/responses/BadRequestError'
  */
-feedRouter.get('/search', async (req, res, next) => {
+feedRouter.get('/search', AuthMiddleware.optionalAuth, async (req: AuthRequest, res, next: NextFunction) => {
   try {
     const query = req.query.q as string;
-    const type = req.query.type as string;
+    const type = req.query.type as string | undefined;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const currentUserId = req.userId;
 
     if (!query) {
       return res.status(400).json({ error: 'Search query is required' });
@@ -175,28 +197,64 @@ feedRouter.get('/search', async (req, res, next) => {
       where.type = type;
     }
 
-    const posts = await prisma.post.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true
+            }
+          },
+          poll: {
+            include: {
+              options: true
+            }
+          },
+          _count: {
+            select: {
+              comments: true
+            }
           }
         },
-        _count: {
-          select: {
-            comments: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50
-    });
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.post.count({ where })
+    ]);
 
-    res.json(posts);
+    // Fetch vote records for current user if authenticated
+    let userVotes: Map<number, string> = new Map();
+    if (currentUserId) {
+      const votes = await prisma.postVote.findMany({
+        where: {
+          userId: currentUserId,
+          postId: { in: posts.map(p => p.id) }
+        }
+      });
+      userVotes = new Map(votes.map(v => [v.postId, v.voteType]));
+    }
+
+    // Add vote flags to posts
+    const postsWithVoteFlags = posts.map(post => ({
+      ...post,
+      wasUpvoted: userVotes.get(post.id) === 'upvote',
+      wasDownvoted: userVotes.get(post.id) === 'downvote'
+    }));
+
+    res.json({
+      posts: postsWithVoteFlags,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     next(error);
   }
