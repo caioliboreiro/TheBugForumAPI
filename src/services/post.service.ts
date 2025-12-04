@@ -37,7 +37,7 @@ export class PostService {
 
     const where: any = {};
     if (type) where.type = type;
-    if (category) where.category = category as Category;
+    if (category && category !== "General") where.category = category as Category;
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({

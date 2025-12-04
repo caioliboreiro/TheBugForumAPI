@@ -56,7 +56,7 @@ feedRouter.get('/feed',
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    if (category) where.category = category as Category;
+    if (category && category !== "General") where.category = category as Category;
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
