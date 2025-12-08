@@ -213,6 +213,11 @@ const options: swaggerJsdoc.Options = {
         }
       }
     },
+    security: [
+      {
+        bearerAuth: []
+      }
+    ],
     tags: [
       {
         name: 'Users',
